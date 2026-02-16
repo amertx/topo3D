@@ -8,8 +8,3 @@
   port = 8888
   targetPort = 5173
 
-# Redirect the API proxy path for cleaner URLs
-[[redirects]]
-  from = "/api/claude"
-  to = "/.netlify/functions/claude-proxy"
-  status = 200

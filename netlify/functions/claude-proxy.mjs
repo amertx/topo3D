@@ -1,4 +1,4 @@
-// netlify/functions/claude-proxy.js
+// netlify/functions/claude-proxy.mjs
 // Proxies requests to the Anthropic API so your key stays secret
 
 export default async (req) => {
@@ -14,10 +14,13 @@ export default async (req) => {
   }
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
-  const ANTHROPIC_API_KEY = Netlify.env.get("ANTHROPIC_API_KEY");
+  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
   if (!ANTHROPIC_API_KEY) {
     return new Response(
@@ -61,5 +64,5 @@ export default async (req) => {
 };
 
 export const config = {
-  path: "/.netlify/functions/claude-proxy",
+  path: "/api/claude",
 };
