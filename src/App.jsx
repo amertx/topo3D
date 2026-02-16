@@ -640,7 +640,11 @@ Include 14-20 landmarks with accurate lat/lng within bounds. influence_radius: 0
         continue;
       }
 
-      if (!response.ok) throw new Error(`API error ${response.status}`);
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("API error body:", errText);
+        throw new Error(`API error ${response.status}: ${errText.slice(0, 200)}`);
+      }
       setRetryCount(0);
       return await response.json();
     }
