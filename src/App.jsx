@@ -627,7 +627,7 @@ Include 14-20 landmarks with accurate lat/lng within bounds. influence_radius: 0
 
     const MAX_RETRIES = 3;
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/api/claude", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body,
