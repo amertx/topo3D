@@ -604,6 +604,7 @@ export default function TopoScope() {
   const [history, setHistory] = useState([]);
   const [selectedLandmark, setSelectedLandmark] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const inputRef = useRef(null);
 
   const callAPI = async (searchQuery) => {
@@ -652,6 +653,7 @@ Include 14-20 landmarks with accurate lat/lng within bounds. influence_radius: 0
 
   const fetchRegion = useCallback(async (searchQuery) => {
     if (!searchQuery.trim()) return;
+    setSidebarOpen(false);
     setLoading(true);
     setError(null);
     setResult(null);
@@ -803,7 +805,7 @@ Include 14-20 landmarks with accurate lat/lng within bounds. influence_radius: 0
   useEffect(() => { inputRef.current?.focus(); }, []);
 
   return (
-    <div style={S.root}>
+    <div className="app-root" style={S.root}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap');
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -815,10 +817,57 @@ Include 14-20 landmarks with accurate lat/lng within bounds. influence_radius: 0
         ::-webkit-scrollbar-track { background:transparent; }
         ::-webkit-scrollbar-thumb { background:#2f332a; border-radius:3px; }
         input:focus { border-color:#6b8f4a !important; box-shadow:0 0 0 3px rgba(107,143,74,0.15) !important; }
+        .mobile-hamburger { display: none; }
+        .sidebar-overlay { display: none; }
+        @media (max-width: 768px) {
+          .mobile-hamburger { display: flex !important; }
+          .app-root { grid-template-columns: 1fr !important; }
+          .app-sidebar {
+            position: fixed !important;
+            top: 0; left: 0; bottom: 0;
+            width: 300px !important;
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+          }
+          .app-sidebar.open { transform: translateX(0); }
+          .sidebar-overlay.open {
+            display: block !important;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+          }
+          .app-main { grid-column: 1 !important; }
+          .info-grid-responsive { grid-template-columns: 1fr 1fr !important; }
+          .terrain-title-responsive { font-size: 18px !important; }
+          .welcome-title { font-size: 22px !important; }
+          .welcome-desc { font-size: 12px !important; max-width: 300px !important; }
+          .center-content { padding: 20px !important; }
+        }
+        @media (max-width: 480px) {
+          .info-grid-responsive { grid-template-columns: 1fr !important; }
+          .desktop-hint { display: none !important; }
+          .mobile-hint { display: inline !important; }
+        }
       `}</style>
 
+      {/* ── Mobile hamburger ── */}
+      <button className="mobile-hamburger" onClick={() => setSidebarOpen(true)}
+        style={{ position: "fixed", top: 12, left: 12, zIndex: 998, width: 40, height: 40, background: "rgba(26,28,22,0.95)", border: "1px solid #252820", borderRadius: 8, color: "#e8dcc8", fontSize: 20, cursor: "pointer", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }}>
+        ☰
+      </button>
+
+      {/* ── Sidebar overlay ── */}
+      <div className={`sidebar-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
+
       {/* ── Sidebar ── */}
-      <aside style={S.sidebar}>
+      <aside className={`app-sidebar ${sidebarOpen ? "open" : ""}`} style={S.sidebar}>
+        {/* Mobile close button */}
+        <button className="mobile-hamburger" onClick={() => setSidebarOpen(false)}
+          style={{ position: "absolute", top: 12, right: 12, zIndex: 1001, width: 32, height: 32, background: "transparent", border: "1px solid #252820", borderRadius: 6, color: "#6b6558", fontSize: 16, cursor: "pointer", alignItems: "center", justifyContent: "center" }}>
+          ✕
+        </button>
         <div style={S.brand}>
           <div style={S.brandRow}>
             <div style={S.brandIcon}>
@@ -921,9 +970,9 @@ Include 14-20 landmarks with accurate lat/lng within bounds. influence_radius: 0
       </aside>
 
       {/* ── Main ── */}
-      <main style={S.main}>
+      <main className="app-main" style={S.main}>
         {loading ? (
-          <div style={S.center}>
+          <div className="center-content" style={S.center}>
             <div style={S.spinner} />
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, color: "#8a8374", marginTop: 20, animation: "pulse 1.5s ease infinite" }}>Loading regional terrain…</div>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#4a4a40", marginTop: 8 }}>
@@ -937,17 +986,20 @@ Include 14-20 landmarks with accurate lat/lng within bounds. influence_radius: 0
             <div style={S.terrainBox}>
               <RegionalTerrain3D regionData={result} />
               <div style={S.terrainOverlay}>
-                <div style={S.terrainTitle}>{result.region_name}</div>
+                <div className="terrain-title-responsive" style={S.terrainTitle}>{result.region_name}</div>
                 <div style={S.terrainSub}>
                   {toFt(result.elevation_stats?.min_m)} ft – {toFt(result.elevation_stats?.max_m)} ft elevation range
                 </div>
               </div>
-              <div style={S.controlsHint}>Drag to rotate · Scroll to zoom · Right-drag to pan</div>
+              <div style={S.controlsHint}>
+                <span className="desktop-hint">Drag to rotate · Scroll to zoom · Right-drag to pan</span>
+                <span className="mobile-hint" style={{ display: "none" }}>Touch to rotate · Pinch to zoom</span>
+              </div>
             </div>
 
             {/* Bottom info panel */}
             <div style={S.infoPanel}>
-              <div style={S.infoGrid}>
+              <div className="info-grid-responsive" style={S.infoGrid}>
                 <div style={S.infoCard}>
                   <div style={S.infoLabel}>Region Overview</div>
                   <div style={S.infoText}>{result.description}</div>
@@ -981,20 +1033,20 @@ Include 14-20 landmarks with accurate lat/lng within bounds. influence_radius: 0
             </div>
           </div>
         ) : error ? (
-          <div style={S.center}>
+          <div className="center-content" style={S.center}>
             <div style={{ fontSize: 36, opacity: 0.3, marginBottom: 12 }}>⚠</div>
             <div style={{ fontSize: 14, color: "#8a8374" }}>{error}</div>
           </div>
         ) : (
-          <div style={S.center}>
+          <div className="center-content" style={S.center}>
             <svg width="90" height="90" viewBox="0 0 100 60" fill="none" stroke="#2a2d25" strokeWidth="1.5">
               <path d="M0 55 L20 25 L35 40 L55 10 L75 35 L100 15 L100 55 Z" fill="#1e2118" stroke="#2a2d25"/>
               <path d="M0 55 L20 25 L35 40 L55 10 L75 35 L100 15" strokeDasharray="3 3" opacity="0.5"/>
               <path d="M10 42 L30 32 L50 22 L70 28 L90 20" stroke="#3d4236" strokeDasharray="2 4" opacity="0.3"/>
               <path d="M5 48 L25 38 L45 28 L65 32 L85 25" stroke="#3d4236" strokeDasharray="2 4" opacity="0.2"/>
             </svg>
-            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 30, color: "#c8c0b4", marginTop: 24 }}>Regional Terrain Explorer</div>
-            <div style={{ fontSize: 14, color: "#555", textAlign: "center", maxWidth: 460, lineHeight: 1.7, marginTop: 12 }}>
+            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 30, color: "#c8c0b4", marginTop: 24 }} className="welcome-title">Regional Terrain Explorer</div>
+            <div style={{ fontSize: 14, color: "#555", textAlign: "center", maxWidth: 460, lineHeight: 1.7, marginTop: 12 }} className="welcome-desc">
               Search for any location to generate an interactive 3D terrain model of the surrounding region — complete with contour lines, landmark pins, and elevation data.
             </div>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#4a6741", padding: "8px 16px", background: "rgba(107,143,74,0.06)", borderRadius: 8, border: "1px solid rgba(107,143,74,0.1)", marginTop: 20 }}>
