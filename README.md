@@ -1,4 +1,4 @@
-# TopoScope — 3D Regional Terrain Explorer
+# TopoScope — 3D Regional Terrain Explorer (https://topo3d.netlify.app/)
 
 Interactive 3D topographic terrain explorer built with React and Three.js. Search any location to generate elevation models with contour lines, landmark pins, 3D city skylines, and elevation data — all displayed in feet.
 
